@@ -1,4 +1,4 @@
-# SPl Token RugCheck
+# SPL Token RugCheck
 
 A Streamlit application that interfaces with the RugCheck API to analyze Solana tokens for potential security risks and detailed information.
 
