@@ -19,66 +19,70 @@ def main():
     # Initialize API
     api = RugCheckAPI()
 
-    # Create two columns for input methods
-    col1, col2 = st.columns(2)
+    # Create tabs
+    single_tab, bulk_tab = st.tabs(["Single Token Check", "Bulk Token Check"])
 
-    with col1:
-        st.subheader("Single Token Check")
+    # Single Token Check Tab
+    with single_tab:
         token_address = st.text_input("Enter Token Mint Address")
         check_single = st.button("Check Token")
 
-    with col2:
-        st.subheader("Bulk Token Check")
-        uploaded_file = st.file_uploader("Upload a text file with token addresses (one per line)", type=['txt'])
+        if check_single and token_address:
+            with st.spinner(f"Analyzing token {token_address}..."):
+                result = api.check_token(token_address)
+                
+                if result:
+                    st.json(result)
+                    
+                    # Add download button for the result
+                    st.download_button(
+                        label="Download Result",
+                        data=json.dumps(result, indent=2),
+                        file_name=f"rugcheck_{token_address}.json",
+                        mime="application/json"
+                    )
+                else:
+                    st.error("Failed to fetch token information")
+
+    # Bulk Token Check Tab
+    with bulk_tab:
+        uploaded_file = st.file_uploader(
+            "Upload a text file with token addresses (one per line)", 
+            type=['txt'],
+            help="Limit 200MB per file"
+        )
         check_bulk = st.button("Check Tokens")
 
-    if check_single and token_address:
-        with st.spinner(f"Analyzing token {token_address}..."):
-            result = api.check_token(token_address)
+        if check_bulk and uploaded_file is not None:
+            # Read token addresses from file
+            token_addresses = [line.decode().strip() for line in uploaded_file.readlines() if line.decode().strip()]
             
-            if result:
-                st.json(result)
-                
-                # Add download button for the result
-                st.download_button(
-                    label="Download Result",
-                    data=json.dumps(result, indent=2),
-                    file_name=f"rugcheck_{token_address}.json",
-                    mime="application/json"
-                )
-            else:
-                st.error("Failed to fetch token information")
+            # Create progress tracking elements
+            progress_bar = st.progress(0)
+            status_text = st.empty()
 
-    elif check_bulk and uploaded_file is not None:
-        # Read token addresses from file
-        token_addresses = [line.decode().strip() for line in uploaded_file.readlines() if line.decode().strip()]
-        
-        # Create progress tracking elements
-        progress_bar = st.progress(0)
-        status_text = st.empty()
+            def update_progress(current_idx, total, current_token):
+                """Callback function to update Streamlit progress indicators"""
+                progress_bar.progress((current_idx + 1) / total)
+                status_text.text(f"Checking token {current_idx + 1}/{total}: {current_token}")
 
-        def update_progress(current_idx, total, current_token):
-            """Callback function to update Streamlit progress indicators"""
-            progress_bar.progress((current_idx + 1) / total)
-            status_text.text(f"Checking token {current_idx + 1}/{total}: {current_token}")
+            with st.spinner("Analyzing tokens..."):
+                results = api.check_tokens_bulk(token_addresses, progress_callback=update_progress)
 
-        with st.spinner("Analyzing tokens..."):
-            results = api.check_tokens_bulk(token_addresses, progress_callback=update_progress)
-
-            if results:
-                st.json(results)
-                
-                # Add download button for all results
-                st.download_button(
-                    label="Download All Results",
-                    data=json.dumps(results, indent=2),
-                    file_name="rugcheck_results.json",
-                    mime="application/json"
-                )
-                
-                status_text.text("Analysis complete!")
-            else:
-                st.error("No valid results found")
+                if results:
+                    st.json(results)
+                    
+                    # Add download button for all results
+                    st.download_button(
+                        label="Download All Results",
+                        data=json.dumps(results, indent=2),
+                        file_name="rugcheck_results.json",
+                        mime="application/json"
+                    )
+                    
+                    status_text.text("Analysis complete!")
+                else:
+                    st.error("No valid results found")
 
 if __name__ == "__main__":
     main() 
