@@ -1,0 +1,30 @@
+{
+  "1HubD1oE9D8L5FQuSBs8r8NTgL3BgMqK1nkDx6Bjch4": {
+    "tokenProgram": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+    "tokenType": "",
+    "risks": [
+      {
+        "name": "Single holder ownership",
+        "value": "30.38%",
+        "description": "One user holds a large amount of the token supply",
+        "score": 3038,
+        "level": "warn"
+      },
+      {
+        "name": "Low amount of LP Providers",
+        "value": "",
+        "description": "Only a few users are providing liquidity",
+        "score": 500,
+        "level": "warn"
+      },
+      {
+        "name": "Mutable metadata",
+        "value": "",
+        "description": "Token metadata can be changed by the owner",
+        "score": 100,
+        "level": "warn"
+      }
+    ],
+    "score": 3638
+  }
+}
